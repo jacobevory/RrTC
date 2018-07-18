@@ -1,11 +1,16 @@
-import sys
+import sys, random, socket
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import (pyqtSlot, Qt)
 
+TCP_IP = '192.168.1.80'
+TCP_PORT = 20250
+BUFFER_SIZE = 1024
+
 wash = 0
 wax = 0
 rainx = 0
+
 
 class rTC(QWidget):
 	
@@ -68,15 +73,20 @@ class rTC(QWidget):
 		
 	@pyqtSlot()
 	def washSelect(self, b):
+	
+		global wash
+		global wax
+		global rainx
+		
 		if b.text() == "Mini Wash":
 			print (b.text() + " Selected")
-			wash = 7;
+			wash = 7
 		if b.text() == "Wheel Blaster Wash":
 			print (b.text() + " Selected")
-			wash = 1;
+			wash = 1
 		if b.text() == "Triple Foam Wash":
 			print (b.text() + " Selected")
-			wash = 11;
+			wash = 11
 		if b.text() == "HotWax":
 			if b.isChecked():
 				print (b.text() + " Enabled")
@@ -98,8 +108,27 @@ class rTC(QWidget):
 	
 	@pyqtSlot()
 	def sendClick(self):
-			print('Wash package sent to controller')
-	
+		global wash
+		global wax
+		global rainx
+		last_id = random.randint(10000, 99999)
+		send_string = ("<washSoft><addTail><id>" + str(last_id) + "</id><washPkgNum>" + str(wash) + "</washPkgNum>")
+		if wax:
+			send_string = send_string + "<optNum>" + str(wax) + "</optNum>"
+		if rainx:
+			send_string = send_string + "<optNum>" + str(rainx) + "</optNum>"
+		send_string = send_string + "</addTail></washSoft>"
+		print (send_string)
+		"""
+		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		s.connect((TCP_IP, TCP_PORT))
+		s.send(send_string.encode('utf-8'))
+		print("Last wash ID: " + last_id)
+		data = s.recv(BUFFER_SIZE)
+		s.close()
+		print('Wash package sent to controller')
+		print ("received data:", data)
+		"""
 if __name__ == '__main__':
 	
 	app = QApplication(sys.argv)
